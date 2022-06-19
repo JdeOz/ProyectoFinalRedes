@@ -66,6 +66,7 @@ void protocoloCreate(int SD, const string &nameNode) {
 
             //Recibir confirmación
             labelResponse = readLabel(SN2);
+            cout<<"respuesta label"<<labelResponse<<endl;
             if (labelResponse == 'M') {
                 auto labelType = readLabel(SN2);
                 auto msg = readString(SN2);

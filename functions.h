@@ -5,7 +5,6 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-#include "sqlite3.h"
 
 using namespace std;
 
@@ -38,9 +37,6 @@ string createNode(const string &nameNode);
 
 string createRelation(const string &node1, const string &relation, const string &node2);
 
-string deleteNode(const string &nameNode);
-
-string deleteRelation(const string &node1, const string &relation, const string &node2);
 
 // Funciones auxiliares
 char *stringToChar(const std::string &str);
@@ -54,60 +50,12 @@ void printTrack(bool in, const string &ip, const string &port, const string &pro
 
 // Funciones SQLite
 
-int callback(void* NotUsed, int argc, char** argv, char** azColName) {
-    int i;
-    for (i = 0; i < argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
 
 void SQLiteCreateNode(const string &nameNode); //TODO: Diego
 
-bool SQLiteCreate(sqlite3* db, const string& nameNode, const string& Rel = "NULL", const string& node2 = "NULL") {
-    char* zErrMsg;
-    string comando;
-    comando = "insert into relaciones (Nodo1, relacion, Nodo2) values ('"+nameNode+"','"+Rel+"','"+node2+"')";
-    const char* sql = comando.c_str();
-    int rc;
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    if (rc != SQLITE_OK) {
-        //fprintf(stderr, "Error SQL: %s\n", zErrMsg);
-        //sqlite3_free(zErrMsg);
-        return false;
-    }
-    return true;
-}
+void SQLiteCreateRelation(const string &node1, const string &relation, const string &node2);//TODO: Diego
 
-bool SQLiteDeleteNode(sqlite3* db, string nameNode) {
-    char* zErrMsg;
-    string comando;
-    comando = "delete from relaciones where Nodo1 = '" + nameNode + "';";
-    const char* com2 = comando.c_str();
-    int rc;
-    rc = sqlite3_exec(db, com2, callback, 0, &zErrMsg);
-    if (rc != SQLITE_OK) {
-        return false;
-    }
-    return true;
-}
 
-//void SQLiteCreateRelation(const string &node1, const string &relation, const string &node2);//TODO: Diego
-//
-//bool SQLiteCreateRelation(sqlite3* db, const string &node1, const string &relation, const string &node2) {
-//
-//    char* zErrMsg;
-//    string comando;
-//    comando = "delete from relaciones where relacion = '" + relation + "';";
-//    const char* com2 = comando.c_str();
-//    int rc;
-//    rc = sqlite3_exec(db, com2, callback, 0, &zErrMsg);
-//    if (rc != SQLITE_OK) {
-//        return false;
-//    }
-//    return true;
-//}
 
 
 

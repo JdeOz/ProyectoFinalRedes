@@ -1,26 +1,28 @@
 #include <vector>
 #include <thread>
+#include "sqliteManager.h"
 #include "functions.h"
 
 
 bool online = true;
 int port;
-sqlite3* db;
+sqliteManager sqlm;
 
 void protocoloCreate(int SD, const string &nameNode) {
     auto label = readLabel(SD);
     switch (label) {
         case 'N': {//Crear un nuevo nodo
-            printTrack(true, "ip", to_string(port), "C " + nameNode + " N");
-            bool ok=SQLiteCreate(db, nameNode);
+            printTrack(true, "ip", "port", "C " + nameNode + " N");
+            bool ok=sqlm.SQLiteCreate(nameNode);
             //Devolver confirmación
+            //bool ok = true;
             if (ok) {
                 auto protocol = message("C", "El nodo " + nameNode + " se creo correctamente.");
-                printTrack(false, "ip", to_string(port), protocol);
+                printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             } else {
                 auto protocol = message("E", "No se pudo crear el nodo " + nameNode + ".");
-                printTrack(false, "ip", to_string(port), protocol);
+                printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             }
             break;
@@ -28,17 +30,20 @@ void protocoloCreate(int SD, const string &nameNode) {
         case 'R': {//Crear una nueva relación
             auto relation = readString(SD);
             auto node2 = readString(SD);
-            printTrack(true, "ip", to_string(port), "C " + nameNode + " R " + relation + " " + node2);
-            bool ok=SQLiteCreate(db, nameNode,relation,node2);
+            printTrack(true, "ip", "port", "C " + nameNode + " R " + relation + " " + node2);
+            bool ok=sqlm.SQLiteCreate(nameNode, relation, node2);
+            //Devolver confirmación
+
+            //bool ok = true;
             if (ok) {
                 auto protocol = message("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
                                              " se creo correctamente.");
-                printTrack(false, "ip", to_string(port), protocol);
+                printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             } else {
                 auto protocol = message("E", "No se pudo crear la relacion " + nameNode + " <- " + relation + " -> " +
                                              node2 + ".");
-                printTrack(false, "ip", to_string(port), protocol);
+                printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             }
             break;
@@ -56,7 +61,7 @@ void protocoloDelete(int SD, const string &nameNode) {
     switch (label) {
         case 'N': {//Crear un nuevo nodo
             printTrack(true, "ip", to_string(port), "C " + nameNode + " N");
-            bool ok=SQLiteDeleteNode(db, nameNode);
+            bool ok=sqlm.SQLiteDeleteNode(nameNode);
             //Devolver confirmación
             if (ok) {
                 auto protocol = message("C", "El nodo " + nameNode + " se borro correctamente.");
@@ -73,10 +78,10 @@ void protocoloDelete(int SD, const string &nameNode) {
             auto relation = readString(SD);
             auto node2 = readString(SD);
             printTrack(true, "ip", to_string(port), "C " + nameNode + " R " + relation + " " + node2);
-//            TODO: bool ok=SQLiteDelete(nameNode, relation, node2);
+            bool ok=sqlm.SQLiteDeleteRel(nameNode, relation, node2);
             //Devolver confirmación
 
-            bool ok = true;
+            //bool ok = true;
             if (ok) {
                 auto protocol = message("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
                                              " se borro correctamente.");
@@ -132,12 +137,11 @@ int main(int argc, char *argv[]) {
         port = 45155;
     } else {
         port = stoi(arguments[1]);
+        string nameDb="Nodo"+string(arguments[1])+".db";
+        sqlm.setport(nameDb);
     }
 
     auto SocketFD = createServer(port);
-
-    string nameBd="node"+to_string(port)+"bd";
-    sqlite3_open(stringToChar(nameBd), &db);
 
     while (online) {
         int ConnectFD = accept(SocketFD, nullptr, nullptr);//Como parámetro al thread
