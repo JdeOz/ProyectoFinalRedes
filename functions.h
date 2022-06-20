@@ -23,19 +23,25 @@ int readInt(int SD, int size = sizeNumber);
 
 string readString(int SD);
 
+string readMessage(int SD);
+
 
 // Funciones para convertir en Protocolo Auxiliares
 string intToProtocol(int x, int digits = sizeNumber);
 
 string stringToProtocol(const string &x);
 
+string attributeToProtocol(const string &attribute, const string &val);
+
+string relationToProtocol(const string &relation, const string &node2);
+
 
 // Funciones para convertir en Protocolo
-string message(const string &type, const string &msg);
+string ProtocolMessage(const string &type, const string &msg);
 
-string createNode(const string &nameNode);
+string ProtocolCreateNode(const string &nameNode);
 
-string createRelation(const string &node1, const string &relation, const string &node2);
+string ProtocolCreateRelation(const string &node1, const string &relation, const string &node2);
 
 
 // Funciones auxiliares
@@ -45,19 +51,45 @@ void sendProtocol(int SD, const string &protocol);
 
 int simpleHash(const string &name, int x);
 
-void printTrack(bool in, const string &ip, const string &port, const string &protocol);
+void printTrack(bool in, const string &ip, int port, const string &protocol);
 
 
-// Funciones SQLite
-
-
-void SQLiteCreateNode(const string &nameNode); //TODO: Diego
-
-void SQLiteCreateRelation(const string &node1, const string &relation, const string &node2);//TODO: Diego
-
-
-
-
+// Funciones del servidor
+string responseCreate(int SN, const string &nameNode){
+    auto labelResponse = readLabel(SN);//Respuesta del nodo
+    string response;//Respuesta al cliente
+    switch (labelResponse) {
+        case 'c': { // Respuesta de confirmación
+            response = ProtocolMessage("c", "El nodo " + nameNode + " fue creado.");
+            break;
+        }
+        case 'e': {// Respuesta de error
+            auto labelError = readLabel(SN);//Tipo de error
+            switch (labelError) {
+                case 'x': {// Error de existencia
+                    response = ProtocolMessage("e", "El nodo " + nameNode + " ya existe.");
+                    break;
+                }
+                case 'e': {// Error de SQL
+                    response = ProtocolMessage("e", "No se pudo crear el nodo " + nameNode + ".");
+                    break;
+                }
+                default: {
+                    cout << "Etiqueta de error create equivocada." << endl;
+                    response = ProtocolMessage("e", "No se pudo crear el nodo " + nameNode + ".");
+                    break;
+                }
+            }
+            break;
+        }
+        default:{
+            cout << "Etiqueta de respuesta create equivocada." << endl;
+            response = ProtocolMessage("e", "No se pudo crear el nodo " + nameNode + ".");
+            break;
+        }
+    }
+    return response;
+}
 
 /*##################################################################################################################*/
 //IMPLEMENTACIONES
@@ -178,22 +210,38 @@ int simpleHash(const string &name, int x) {
     return total % x;
 }
 
-string createNode(const string &nameNode) {
+string ProtocolCreateNode(const string &nameNode) {
     return "C" + stringToProtocol(nameNode) + "N";
 }
 
-string createRelation(const string &node1, const string &relation, const string &node2) {
+string ProtocolCreateRelation(const string &node1, const string &relation, const string &node2) {
     return "C" + stringToProtocol(node1) + "R" + stringToProtocol(relation) +
            stringToProtocol(node2);
 }
 
-string message(const string &type, const string &msg) {
-    return "M" + type + stringToProtocol(msg);
+string ProtocolMessage(const string &type, const string &msg) {
+    return type + stringToProtocol(msg);
 }
 
-void printTrack(bool in, const string &ip, const string &port, const string &protocol) {
+void printTrack(bool in, const string &ip, int port, const string &protocol) {
     in ? cout << "<<" : cout << ">>";
     cout << ip << " , " << port << ": " << protocol << endl;
+}
+
+string attributeToProtocol(const string &attribute, const string &val) {
+    string protocol = stringToProtocol(attribute) + stringToProtocol(val);
+    return protocol;
+}
+
+string relationToProtocol(const string &relation, const string &node2) {
+    string protocol = stringToProtocol(relation) + stringToProtocol(node2);
+    return protocol;
+}
+
+string readMessage(int SD) {
+    auto label = readLabel(SD);
+    auto message = readString(SD);
+    return string(1,label) + " " + message;
 }
 
 string deleteNode(const string &nameNode) {

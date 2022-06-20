@@ -9,19 +9,19 @@ int port;
 sqliteManager sqlm;
 
 void protocoloCreate(int SD, const string &nameNode) {
-    auto label = readLabel(SD);
+    auto label = readLabel(SD);// Tipo de create
     switch (label) {
         case 'N': {//Crear un nuevo nodo
             printTrack(true, "ip", "port", "C " + nameNode + " N");
-            bool ok=sqlm.SQLiteCreate(nameNode);
+            bool ok = sqlm.SQLiteCreate(nameNode);
             //Devolver confirmación
             //bool ok = true;
             if (ok) {
-                auto protocol = message("C", "El nodo " + nameNode + " se creo correctamente.");
+                auto protocol = ProtocolMessage("C", "El nodo " + nameNode + " se creo correctamente.");
                 printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             } else {
-                auto protocol = message("E", "No se pudo crear el nodo " + nameNode + ".");
+                auto protocol = ProtocolMessage("E", "No se pudo crear el nodo " + nameNode + ".");
                 printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             }
@@ -31,18 +31,19 @@ void protocoloCreate(int SD, const string &nameNode) {
             auto relation = readString(SD);
             auto node2 = readString(SD);
             printTrack(true, "ip", "port", "C " + nameNode + " R " + relation + " " + node2);
-            bool ok=sqlm.SQLiteCreate(nameNode, relation, node2);
+            bool ok = sqlm.SQLiteCreate(nameNode, relation, node2);
             //Devolver confirmación
 
             //bool ok = true;
             if (ok) {
-                auto protocol = message("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
-                                             " se creo correctamente.");
+                auto protocol = ProtocolMessage("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
+                                                     " se creo correctamente.");
                 printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             } else {
-                auto protocol = message("E", "No se pudo crear la relacion " + nameNode + " <- " + relation + " -> " +
-                                             node2 + ".");
+                auto protocol = ProtocolMessage("E", "No se pudo crear la relacion " + nameNode + " <- " + relation +
+                                                     " -> " +
+                                                     node2 + ".");
                 printTrack(false, "ip", "port", protocol);
                 sendProtocol(SD, protocol);
             }
@@ -61,14 +62,14 @@ void protocoloDelete(int SD, const string &nameNode) {
     switch (label) {
         case 'N': {//Crear un nuevo nodo
             printTrack(true, "ip", to_string(port), "C " + nameNode + " N");
-            bool ok=sqlm.SQLiteDeleteNode(nameNode);
+            bool ok = sqlm.SQLiteDeleteNode(nameNode);
             //Devolver confirmación
             if (ok) {
-                auto protocol = message("C", "El nodo " + nameNode + " se borro correctamente.");
+                auto protocol = ProtocolMessage("C", "El nodo " + nameNode + " se borro correctamente.");
                 printTrack(false, "ip", to_string(port), protocol);
                 sendProtocol(SD, protocol);
             } else {
-                auto protocol = message("E", "No se pudo crear el nodo " + nameNode + ".");
+                auto protocol = ProtocolMessage("E", "No se pudo crear el nodo " + nameNode + ".");
                 printTrack(false, "ip", to_string(port), protocol);
                 sendProtocol(SD, protocol);
             }
@@ -78,18 +79,19 @@ void protocoloDelete(int SD, const string &nameNode) {
             auto relation = readString(SD);
             auto node2 = readString(SD);
             printTrack(true, "ip", to_string(port), "C " + nameNode + " R " + relation + " " + node2);
-            bool ok=sqlm.SQLiteDeleteRel(nameNode, relation, node2);
+            bool ok = sqlm.SQLiteDeleteRel(nameNode, relation, node2);
             //Devolver confirmación
 
             //bool ok = true;
             if (ok) {
-                auto protocol = message("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
-                                             " se borro correctamente.");
+                auto protocol = ProtocolMessage("M", "La relacion " + nameNode + " <- " + relation + " -> " + node2 +
+                                                     " se borro correctamente.");
                 printTrack(false, "ip", to_string(port), protocol);
                 sendProtocol(SD, protocol);
             } else {
-                auto protocol = message("E", "No se pudo crear la relacion " + nameNode + " <- " + relation + " -> " +
-                                             node2 + ".");
+                auto protocol = ProtocolMessage("E", "No se pudo crear la relacion " + nameNode + " <- " + relation +
+                                                     " -> " +
+                                                     node2 + ".");
                 printTrack(false, "ip", to_string(port), protocol);
                 sendProtocol(SD, protocol);
             }
@@ -125,10 +127,6 @@ void readServer(int SD) {
 }
 
 int main(int argc, char *argv[]) {
-
-
-
-
     vector<string> arguments;
     for (int i = 0; i < argc; i++) {
         arguments.emplace_back(argv[i]);
@@ -137,7 +135,8 @@ int main(int argc, char *argv[]) {
         port = 45155;
     } else {
         port = stoi(arguments[1]);
-        string nameDb="Nodo"+string(arguments[1])+".db";
+        cout << "Se inicio el nodo en el puerto:" << port << endl;
+        string nameDb = "Nodo" + string(arguments[1]) + ".db";
         sqlm.setport(nameDb);
     }
 
